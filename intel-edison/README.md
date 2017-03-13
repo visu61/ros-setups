@@ -162,6 +162,9 @@ If all went well you should have a ROS installtion. Hook your Edison up to the P
 
 # Install Edison MRAA Libraries
 
+Follow the instructions here to install the latest swig for mraa http://swig.org/svn.html
+To build swig, `apt-get install bison'.
+
 Follow the instructions on https://learn.sparkfun.com/tutorials/installing-libmraa-on-ubilinux-for-edison
 
 # Setting I2C Permission with udev rules
