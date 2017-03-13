@@ -8,15 +8,18 @@ Connect one USB cable to the cosole port and then start your temrminal app (see 
 
 # Flash Ubilinux
 
-To flash Ubilinux carefully follow the instruction here http://www.emutexlabs.com/ubilinux/29-ubilinux/218-ubilinux-installation-instructions-for-intel-edison
+To flash Ubilinux carefully follow the instruction here https://learn.sparkfun.com/tutorials/loading-debian-ubilinux-on-the-edison
 
-The Ubilinux image can be downloaded from this page: http://www.emutexlabs.com/ubilinux
+However, the link for dfu-util is outdated. Download the latest version from this page:
+http://dfu-util.sourceforge.net/releases/
+
+The Ubilinux image can be downloaded from this page: http://www.emutexlabs.com/ubilinux and click on "ubilinux for Edison"
 
 Make sure you have the console USB cable in place and use it so you know when the installation has finished. You MUST NOT remove power before it’s done or it could be bricked. If you don't have a console connection make sure you wait 2 minutes at the end of the installation as it instructs. During this time it is completing the installion which shoudln't be interrupted. If you don't get any update on your console after this message is displayed restart your console terminal connection.
 
-Connect to the console with 115000 8N1, for example: 
+Connect to the console with 115000 8N1, for example:
 
-`screen /dev/USB0 115200 8N1` 
+`screen /dev/USB0 115200 8N1`
 
 and login as root (password: edison)
 
@@ -63,9 +66,13 @@ You will need more space on the root partition. Run the following commands:
 `ln -s /home/cache /var/cache`
 
 ## Wifi
+
+Run `sudo cp /etc/network/interfaces /etc/network/interfaces.home`
+Run `sudo cp /etc/network/interfaces /etc/network/interfaces.home`
+
 Run `wpa_passphrase your-ssid your-wifi-password` to generate pka.
 `cd /etc/network`
-Edit /etc/network/interfaces
+Edit both /etc/network/interfaces.home and /etc/network/interfaces.work
 - Change wpa-ssid
 - Change wpa-pka
 - Comment out `auto usb0` plus the three lines that follow it (interface definition)
@@ -85,6 +92,20 @@ iface wlan0 inet static
     netmask 255.255.255.0
 ```
 
+Create script `sudo nano ~/homenet.sh` and `sudo nano ~/worknet.sh`
+Make script executable `sudo chmod +x ~/homenet.sh` and `sudo chmod +x ~/worknet.sh`
+
+Filling the following in the script
+<pre><code>
+#!/bin/bash
+# Change Network to Home Network
+cp /etc/network/interfaces.home /etc/network/interfaces
+echo "Disable wlan0"
+ifdown wlan0
+echo "Re-enable wlan0"
+ifup wlan0
+</code></pre>
+
 For the remaining steps you may wish to login via ssh instead.
 
 ## Update
@@ -98,7 +119,7 @@ apt-get -y upgrade
 dpkg-reconfigure locales # Select only en_US.UTF8 and select None as the default on the confirmation page that follows.
 update-locale
 ```
-Update the `/etc/default/locale` file an ensure `LANG=en_US.UTF-8` then reboot.
+Update the `/etc/default/locale` file and ensure `LANG=en_US.UTF-8` and it uncommented out. Add `LC_ALL=C`. Then reboot.
 
 Note that if you receive warning messages about missing or wrong languages this is likely to be due to the locale being forwarded when using SSH. Either ignore them or complete this step via the serial console by commenting out the SendEnv LANG LC_* line in the local /etc/ssh/ssh_config file on your machine (not the Edison).
 
@@ -117,6 +138,12 @@ apt-get -y install sudo less
 `usermod -aG sudo px4`
 `usermod -aG dialout px4`
 
+## Remove "edison" User
+`deluser --remove-home edison`
+
+## Add host
+`nano /etc/hosts` and add below localhost `127.0.0.1 ubilinux`
+
 Login as px4 to continue.
 
 # ROS/MAVROS Installation
@@ -132,6 +159,16 @@ cd ros-setups/intel-edison/
 ```
 
 If all went well you should have a ROS installtion. Hook your Edison up to the Pixhawk and run a test. See this page for instructions: https://pixhawk.org/peripherals/onboard_computers/intel_edison
+
+# Install Edison MRAA Libraries
+
+Follow the instructions on https://learn.sparkfun.com/tutorials/installing-libmraa-on-ubilinux-for-edison
+
+# Setting I2C Permission with udev rules
+
+Create a new udev rule `sudo nano /etc/udev/rules.d/edison.rules`
+Add in `KERNEL="i2c*", GROUP="dialout", MODE="660"`
+Reboot the edison for udev rules to take effect.
 
 # Python Flight App
 

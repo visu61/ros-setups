@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# The following installation is based on: http://wiki.ros.org/wiki/edison 
+# The following installation is based on: http://wiki.ros.org/wiki/edison
 # and http://wiki.ros.org/ROSberryPi/Installing%20ROS%20Indigo%20on%20Raspberry%20Pi
 
-if [ `whoami` == "root" ]; then 
+if [ `whoami` == "root" ]; then
   echo "Do not run this as root!"
   exit 1
 fi
@@ -40,17 +40,31 @@ echo "*** rosinstall ***"
 rosinstall_generator ros_comm mavros --rosdistro indigo --deps --wet-only --exclude roslisp --tar > indigo-ros_comm-wet.rosinstall
 
 echo "*** wstool ***"
-sudo wstool init src -j1 indigo-ros_comm-wet.rosinstall
+sudo wstool init src -j3 indigo-ros_comm-wet.rosinstall
 while [ $? != 0 ]; do
   echo "*** wstool - download failures, retrying ***"
-  sudo wstool update -t src -j1
+  sudo wstool update -t src -j3
 done
+
+echo "*** mavros and mavlink ***"
+rosinstall_generator --upstream mavros --rosdistro indigo > mavros.rosinstall
+rosinstall_generator mavlink --rosdistro indigo > mavlink.rosinstall
+
+echo "*** wstool merge ***"
+sudo wstool merge -t src mavros.rosinstall
+sudo wstool merge -t src mavlink.rosinstall
+while [ $? != 0 ]; do
+  echo "*** wstool - download failures, retrying ***"
+  sudo wstool update -t src -j3
+done
+
+cd ~/ros_catkin_ws
 
 echo "*** Install cmake and update sources.list ***"
 mkdir ~/ros_catkin_ws/external_src
 sudo apt-get -y install checkinstall cmake
 sudo sh -c 'echo "deb-src http://mirrordirector.raspbian.org/raspbian/ testing main contrib non-free rpi" >> /etc/apt/sources.list'
-sudo sh -c 'echo "deb http://http.debian.net/debian wheezy-backports main" >> /etc/apt/sources.list'
+#sudo sh -c 'echo "deb http://http.debian.net/debian wheezy-backports main" >> /etc/apt/sources.list'
 sudo apt-get -y update
 
 echo "*** Install console bridge ***"
@@ -72,7 +86,7 @@ echo “About to start some heavy building. Go have a looong coffee break.”
 echo “******************************************************************”
 
 echo "*** Building ROS ***"
-sudo ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release -DMAVLINK_DIALECT=pixhawk --install-space /home/ros/indigo
+sudo ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space /home/ros/indigo
 
 sudo ln -sf /home/ros /opt/
 
@@ -87,4 +101,3 @@ cd ~/ros_catkin_ws
 
 echo ""
 echo "*** FINISHED! ***"
-
