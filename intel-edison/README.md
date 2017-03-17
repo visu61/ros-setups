@@ -163,9 +163,32 @@ If all went well you should have a ROS installtion. Hook your Edison up to the P
 # Install Edison MRAA Libraries
 
 Follow the instructions here to install the latest swig for mraa http://swig.org/svn.html
-To build swig, `apt-get install bison'.
+
+To build swig, `apt-get install bison`.
 
 Follow the instructions on https://learn.sparkfun.com/tutorials/installing-libmraa-on-ubilinux-for-edison
+
+If encounter `Unknown Cmake command "target_include_directories"`, modify mraa source code in accordance to the following commit:
+https://github.com/Drunkar/mraa/commit/8c1891013a6665ac35d33ff00e13f1e3db3d53f5
+
+In short,
+
+in /mraa/src/python/python2/CMakeLists.txt
+```
+-    target_include_directories(${SWIG_MODULE_python2-mraa_REAL_NAME}
+-      PUBLIC
++    set_property(TARGET ${SWIG_MODULE_python2-mraa_REAL_NAME}
++      APPEND PROPERTY INCLUDE_DIRECTORIES
+```
+
+in /mraa/src/python/python3/CMakeLists.txt
+```
+-    target_include_directories(${SWIG_MODULE_python3-mraa_REAL_NAME}
+-      PUBLIC
++    set_property(TARGET ${SWIG_MODULE_python3-mraa_REAL_NAME}
++      APPEND PROPERTY INCLUDE_DIRECTORIES
+```
+
 
 # Setting I2C Permission with udev rules
 
