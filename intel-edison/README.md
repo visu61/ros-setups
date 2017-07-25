@@ -124,8 +124,32 @@ For the remaining steps you may wish to login via ssh instead.
 
 ## Update
 ```
-apt-get -y update
-apt-get -y upgrade
+Add the following to the bottom of sources list (/etc/apt/sources.list)
+Run`sudo nano /etc/apt/sources.list`
+
+add the following line to the sources list for updating it from other server
+
+```
+deb http://ftp.sg.debian.org/debian jessie main contrib non-free
+#deb-src http://http.debian.net/debian jessie main contrib non-free
+
+deb http://ftp.sg.debian.org/debian jessie-updates main contrib non-free
+#deb-src http://http.debian.net/debian jessie-updates main contrib non-free
+
+deb http://security.debian.org/ jessie/updates main contrib non-free
+#deb-src http://security.debian.org/ jessie/updates main contrib non-free
+
+#deb http://ubilinux.org/edison wheezy main
+
+deb http://ftp.sg.debian.org/debian jessie-backports main
+```
+
+execute the below line after saving the file 
+
+Run `sudo apt-get -y update`
+
+Run `sudo apt-get -f install`
+Run `sudo apt-get -y upgrade`
 ```
 
 ## Locales
