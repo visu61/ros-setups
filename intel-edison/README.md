@@ -157,6 +157,7 @@ Run `sudo apt-get -y upgrade`
 ## Locales
 
 Run `sudo apt-get install locales`
+
 Run `sudo dpkg-reconfigure locales`
 
 then Select only "en_US.UTF8" followed by region "Asia" follwed by "Singapore" and finally select "None" as the default on the confirmation page that follows.
@@ -176,35 +177,146 @@ Note that if you receive warning messages about missing or wrong languages this 
 ```
 
 ## Timezone
-`sudo dpkg-reconfigure tzdata`
+Run `sudo apt-get install ntp`
+
+Run `sudo nano /etc/ntp.conf` 
+- rename the server in the file from  "0.debian.pool.ntp.org" to "server 0.sg.pool.ntp.org"
+
+save the file and then
+
+Run `sudo dpkg-reconfigure tzdata`
 
 ## Tools
 ```
-apt-get -y install git
-apt-get -y install sudo less
+Run `sudo apt-get -y install git`
+Run `sudo apt-get -y install sudo less`
 ```
+## Add host to the intel edison
+`sudo nano /etc/hosts` and add the following line below in the hosts file.
+
+localhost 127.0.0.1 edison
 
 ## Add User
 `adduser px4`
-`passwd px4` (set the password to px4)
-`usermod -aG sudo px4`
+`passwd px4` (set the password to px4)`usermod -aG sudo px4`
 `usermod -aG dialout px4`
 
 Login as px4 to continue.
 
 # ROS/MAVROS Installation
 
-As ROS packages for the Edison/Ubilinux don't exist we will have to build it from source. This process will take about 1.5 hours but most of it is just waiting for it to build.
-
+As ROS packages for the Edison/Debian don't exist we will have to build it from source. This process will take about 1.5 hours but most of it is just waiting for it to build.
 A script has been writen to automate the building and installation of ROS. Current testing has been copy-pasting line by line to the console. Willing testers are encouraged to try out running the script:
 
-```
-git clone https://github.com/UAVenture/ros-setups
-cd ros-setups/intel-edison/
-./install_ros.sh
-```
+Run `sudo git clone -b jessie https://github.com/tcheehow/ros-setups`
+"Clone forked branch (Jessie)  "
+
+Run `sudo cd ros-setups/intel-edison/`
+
+Run`./install_ros.sh`
+if the above method produces error then follow this step otherwise just go ahead to install libraries like mraa
 
 If all went well you should have a ROS installtion. Hook your Edison up to the Pixhawk and run a test. See this page for instructions: https://pixhawk.org/peripherals/onboard_computers/intel_edison
+
+
+## Alternate method for installing ros 
+
+```
+#!/bin/bash
+
+# The following installation is based on: http://wiki.ros.org/wiki/edison
+# and http://wiki.ros.org/ROSberryPi/Installing%20ROS%20Indigo%20on%20Raspberry%20Pi
+
+```
+check if you are root
+
+```
+
+if [ `whoami` == "root" ]; then
+  echo "Do not run this as root!"
+  exit 1
+fi
+```
+" Update sources.list "
+ 
+Run `sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu jessie main" > /etc/apt/sources.list.d/ros-latest.list' `
+
+" Get ROS and Raspian keys "
+
+Run ` sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116 `
+
+Run `wget https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O - | sudo apt-key add - `
+
+Run `wget http://archive.raspbian.org/raspbian.public.key -O - | sudo apt-key add - `
+
+" Update the OS "
+
+Run `sudo apt-get -y update`
+
+Run `sudo apt-get -y upgrade`
+
+"Install required OS packages "
+
+Run `sudo apt-get -y install pkg-config`
+
+Run `sudo apt-get -y install python-setuptools python-pip python-yaml python-argparse python-distribute python-docutils python-dateutil  python-six `
+
+'Install required ROS packages'
+
+Run `sudo pip install rosdep rosinstall_generator wstool rosinstall`
+ 
+ "Fix some permission issues"
+ Run `sudo cd ~ `
+ 
+ Run `sudo chown -R px4 .`
+ 
+ Run `sudo rosdep init`
+ 
+ Run `rosdep update `
+
+ Run `mkdir ~/ros_catkin_ws `
+ 
+ Run `cd ~/ros_catkin_ws `
+
+ Run `Chmod 777 /ros_catkin_ws `
+
+## Ros Install 
+
+"This will install only mavros and not mavros-extras (no image support which the Edison can’t really handle well anyway)."
+Run `rosinstall_generator ros_comm mavros --rosdistro indigo --deps --wet-only --exclude roslisp --tar > indigo-ros_comm-wet.rosinstall`
+
+" wstool installation "
+
+`sudo wstool init src -j3 indigo-ros_comm-wet.rosinstall `
+
+if there is wstool failure then run the following command
+
+Run ` sudo wstool update -t src -j3 `
+
+```
+while [ $? != 0 ]; do
+  echo "*** wstool - download failures, retrying ***"
+  sudo wstool update -t src -j3
+done
+```
+
+Run `sudo cd ~/ros_catkin_ws `
+
+" Install cmake and update sources.list "
+
+Run `sudo mkdir ~/ros_catkin_ws/external_src `
+
+Run `sudo apt-get -y install checkinstall cmake `
+
+Run `sudo sh -c 'echo "deb-src http://mirrordirector.raspbian.org/raspbian/ testing main contrib non-free rpi" >> /etc/apt/sources.list' `
+
+``` 
+run the below code only when there is error in previous one 
+#sudo sh -c 'echo "deb http://http.debian.net/debian jessie-backports main" >> /etc/apt/sources.list'
+
+```
+
+
 
 # Python Flight App
 
