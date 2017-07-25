@@ -122,9 +122,11 @@ iface wlan0 inet static
 
 For the remaining steps you may wish to login via ssh instead.
 
-## Update
+
 ```
+## updates
 Add the following to the bottom of sources list (/etc/apt/sources.list)
+
 Run`sudo nano /etc/apt/sources.list`
 
 add the following line to the sources list for updating it from other server
@@ -149,17 +151,29 @@ execute the below line after saving the file
 Run `sudo apt-get -y update`
 
 Run `sudo apt-get -f install`
+
 Run `sudo apt-get -y upgrade`
-```
 
 ## Locales
-```
-dpkg-reconfigure locales # Select only en_US.UTF8 and select None as the default on the confirmation page that follows.
-update-locale
-```
-Update the `/etc/default/locale` file an ensure `LANG=en_US.UTF-8` then reboot.
 
+Run `sudo apt-get install locales`
+Run `sudo dpkg-reconfigure locales`
+
+then Select only "en_US.UTF8" followed by region "Asia" follwed by "Singapore" and finally select "None" as the default on the confirmation page that follows.
+Run `Update-locale`
+
+Update the /etc/default/locale file and ensure LANG=en_US.UTF-8 and it uncommented out. Add LC_ALL=C.
+Run `sudo nano etc/default/locale` 
+- uncomment the LANG=en_US.UTF-8
+- add the line LC_ALL=C
+
+reboot the system to make changes 
+
+in case of any locale errors go through 
+```
+---Solution for locale error --
 Note that if you receive warning messages about missing or wrong languages this is likely to be due to the locale being forwarded when using SSH. Either ignore them or complete this step via the serial console by commenting out the SendEnv LANG LC_* line in the local /etc/ssh/ssh_config file on your machine (not the Edison).
+```
 
 ## Timezone
 `sudo dpkg-reconfigure tzdata`
