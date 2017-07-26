@@ -274,6 +274,206 @@ Run `sudo pip install rosdep rosinstall_generator wstool rosinstall`
  
  Run `rosdep update `
 
+
+Run `sudo apt-get -y update`
+
+"Install console bridge "
+
+Run `cd ~/ros_catkin_ws/external_src`
+Run `sudo apt-get -y build-dep console-bridge`
+Run `apt-get -y source -b console-bridge`
+Run `sudo dpkg -i libconsole-bridge0.2*.deb libconsole-bridge-dev*.deb`
+
+"Install liblz4-dev "
+
+Run `sudo apt-get -y install liblz4-dev`
+
+"rosdep install - Errors at the end are normal "
+rUN `cd ~/ros_catkin_ws`
+
+" Python errors after the following command are normal."
+Run `rosdep install --from-paths src --ignore-src --rosdistro indigo -y -r --os=debian:jessie`
+
+echo “******************************************************************”
+echo “About to start some heavy building. Go have a looong coffee break.”
+echo “******************************************************************”
+
+## FIX THE BUILDING THE 69 PACAKGE 
+
+Run `cd /home/px4/ros_catkin_ws/build_isolated/mavros && /opt/ros/indigo/env.sh make -j1 -l2 `
+"the parallel process has the issue"
+
+Run `cd ~/ros_catkin_ws/build_isolated/`
+
+Run `sudo chown -R px4 .`
+
+Run `cd ~/ros_catkin_ws/devel_isolated/`
+
+Run `sudo chown -R px4 `
+
+Run `cd ~/ros_catkin_ws`
+
+Run `cd /home/px4/ros_catkin_ws/build_isolated/mavros && /opt/ros/indigo/env.sh make -j1 -l2`
+"#NEED TO FIX THE CHMOD BUILD IN BUILOD ISOLATED"
+
+"#Then rebuild the ros"
+
+## Building ROS 
+Run `sudo ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space /opt/ros/indigo`
+
+```
+if some error is captured then executed the line otherwise its fine go ahead
+#cd ~/ros_catkin_ws/build_isolated/
+#sudo chown -R px4 .
+
+#sudo ln -sf /home/ros /opt/
+```
+"Updating .profile and .bashrc "
+
+Run `echo "source /opt/ros/indigo/setup.bash" >> ~/.profile`
+
+Run `source ~/.profile`
+
+Run `echo "source ~/ros_catkin_ws/devel_isolated/setup.bash" >> ~/.bashrc`
+
+Run `source ~/.bashrc`
+
+Run `cd ~/ros_catkin_ws`
+
+
+echo "*** FINISHED building the ros! ***"
+
+
+## Install Edison swig installation
+```
+Method 1 ) easy 
+
+```
+
+Run `sudo apt-get update`
+
+Run `sudo apt-cache search pcre`
+
+"#please ensure the following packages are returned in the console as output" 
+"#libpcre3-dev - Perl 5 Compatible Regular Expression Library - development files"
+
+Run `sudo apt-get install libpcre3-dev`
+
+Run `sudo apt-get install git`
+
+Run `sudo apt-get install cmake`
+
+Run `sudo apt-get install python-dev`
+
+Run `sudo apt-get install swig`
+
+ 
+-- If the swig installation fails then build from method 2
+
+```
+Method 2) build from scratch
+*Before building and installing mraa library be sure to install the following swig 
+*To build swig  by method 2 be sure to run the given command before going to method 2
+
+
+```
+" please run only for method 2"
+
+Run `sudo apt-get install bison automake autoconf build-essential g++.`
+-It might ask to fix broken packages
+
+Run `sudo apt-get -f install`
+
+Run `git clone https://github.com/swig/swig.git`
+
+Run `cd swig`
+
+Run `chmod +x ./autogen.sh`
+
+Run `sudo ./autogen.sh`
+
+Run `sudo chown -R px4 .`
+
+Run `sudo ./configure --prefix=/some/directory`
+
+*please make sure that some directory is created after this command
+Run `sudo make`
+
+Run `sudo make install`
+
+
+-If everything went fine build would be successful for the swig 
+
+## Install Edison mraa libraries
+libmraa is not in apt so we’ll have to compile it from source. Don’t worry, it’s easy:
+
+```
+git clone https://github.com/intel-iot-devkit/mraa.git
+mkdir mraa/build && cd $_
+cmake .. -DBUILDSWIGNODE=OFF
+make
+sudo make install
+cd
+```
+Important: Make sure you run the final command, “make install” with root or “sudo.”
+
+"That DBUILDSWIGNODE flag turns off node.js support, which isn’t available in the version of swig in apt. If you need node.js, you can compile a newer version of swig from source (3.01+)."
+
+## Update Shared Library Cache
+"To use the library in C or C++ programs, we need to add it to our shared library cache. With root (or using “sudo”), open up the ld.so.conf file:"
+
+Run `sudo nano /etc/ld.so.conf`
+Scroll down to the bottom of the file and add:
+
+`/usr/local/lib/i386-linux-gnu/`
+
+Your ld.so.conf file should look like this:
+![alt text](https://github.com/AMAN3003/UAV/blob/master/uav1.png)
+
+Save and exit (‘Crtl-x’ and ‘y’ with nano). Type the command (using root or “sudo”):
+
+run `sudo ldconfig`
+
+You can check to make sure that the cache was updated by typing the command:
+Run `sudo ldconfig -p | grep mraa`
+![alt text](https://github.com/AMAN3003/UAV/blob/master/uav2.png)
+
+## Export Library Path for Python
+
+If you plan to use Python with mraa, you will need to export its location to the Python path. Enter the command:
+
+Run `export PYTHONPATH=$PYTHONPATH:$(dirname $(find /usr/local -name mraa.py))`
+
+Note that this command lets us use the mraa module for this terminal session only. If we restart the Edison, we will have to retype the command.
+
+Optional: You can modify the .bashrc file to run the commands automatically every time the Edison starts. Open the .bashrc file with your favorite editor. For example:
+
+Run `nano ~/.bashrc`
+
+Scroll all the way down to the bottom of the file, and add the command from above in a new line.
+
+`export PYTHONPATH=$PYTHONPATH:$(dirname $(find /usr/local -name mraa.py))`
+The bottom of your .bashrc file should look like the screenshot below.
+![alt text](https://github.com/AMAN3003/UAV/blob/master/uav3.png)
+
+
+Save and exit (‘Crtl-x’ and ‘y’ with nano).
+
+
+## Freeing up Space on the Root Partition
+You will need more space on the root partition. Run the following commands:
+
+Run `mv /var/cache /home/`
+
+Run `ln -s /home/cache /var/cache`
+
+Run `mv /usr/share /home/`
+
+Run `ln -s /home/share /var/share`
+
+
+
+
  Run `mkdir ~/ros_catkin_ws `
  
  Run `cd ~/ros_catkin_ws `
